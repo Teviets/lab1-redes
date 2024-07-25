@@ -1,4 +1,4 @@
-package emisor;
+package CRC32.emisor;
 
 import java.util.Scanner;
 import java.util.ArrayList;
@@ -23,11 +23,10 @@ public class vista {
         System.out.println();
     }
 
-    public static void MessageCRC(ArrayList<String> mensaje){
+    public static void MessageCRC(String mensaje){
         System.out.println("Mensaje con CRC: ");
-        for (int i = 0; i < mensaje.size(); i++) {
-            System.out.print(mensaje.get(i) + "\n");
-        }
+        System.out.println(mensaje);
+        
         System.out.println();
     }
 }
