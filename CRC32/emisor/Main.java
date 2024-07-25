@@ -33,7 +33,7 @@ public class Main {
 
         // Escribir en el archivo
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            writer.write(crc.getCRC());
+            writer.write(crc.getMensaje().get(0)+crc.getCRC());
             System.out.println("Datos escritos en el archivo " + filePath);
         } catch (IOException e) {
             System.err.println("Error al escribir en el archivo: " + e.getMessage());

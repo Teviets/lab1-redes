@@ -1,63 +1,66 @@
-import os
+# Tabla de polinomios para CRC-32
+CRC32_POLY = 0xEDB88320
+CRC32_INIT = 0xFFFFFFFF
 
-POLYNOMIAL = 0xEDB88320
-CRC32_MASK = 0xFFFFFFFF
-
-# Crear la tabla CRC-32
-CRC32_TABLE = [0] * 256
-for i in range(256):
-    crc = i
-    for j in range(8):
-        if (crc & 1) != 0:
-            crc = (crc >> 1) ^ POLYNOMIAL
-        else:
-            crc = crc >> 1
-    CRC32_TABLE[i] = crc
-
-def calculate_crc32(data):
-    crc = CRC32_MASK
+def crc32(data):
+    crc = CRC32_INIT
     for byte in data:
-        table_index = (crc ^ byte) & 0xFF
-        crc = (crc >> 8) ^ CRC32_TABLE[table_index]
-    crc ^= CRC32_MASK
-    return format(crc, '032b')
+        crc ^= byte
+        for _ in range(8):
+            if crc & 1:
+                crc = (crc >> 1) ^ CRC32_POLY
+            else:
+                crc >>= 1
+    return crc ^ 0xFFFFFFFF
 
-def read_file(file_path):
-    # Obtener la ruta absoluta a partir de la ruta relativa
-    absolute_path = os.path.abspath(file_path)
-    print(f"Intentando abrir el archivo en: {absolute_path}")
-    
-    try:
-        with open(absolute_path, 'r') as file:
-            lines = file.readline()
-        return lines
-    except FileNotFoundError:
-        print(f"Error: El archivo '{absolute_path}' no se encontró.")
-        raise
+def parse_message_with_crc(binary_message):
+    # Verificar si la longitud del mensaje es suficiente
+    if len(binary_message) < 33:
+        raise ValueError("Mensaje demasiado corto para contener CRC-32")
 
-def interpret_message_and_crc(file_path):
-    lines = read_file(file_path)
-    if len(lines) < 2:
-        raise ValueError("El archivo debe contener al menos dos líneas: mensaje y CRC.")
+    # Extraer el CRC de los últimos 32 bits
+    message_data = binary_message[:-32]
+    received_crc = int(binary_message[-32:], 2)
 
-    message_binary = lines[0].strip()
-    crc_received = lines[1].strip()
+    # Convertir el mensaje a una lista de bytes
+    message_bytes = [int(message_data[i:i+8], 2) for i in range(0, len(message_data), 8)]
 
-    # Convertir el mensaje binario a una cadena de texto
-    message = ''.join(chr(int(message_binary[i:i+8], 2)) for i in range(0, len(message_binary), 8))
+    # Calcular el CRC del mensaje
+    calculated_crc = crc32(message_bytes)
 
-    # Calcular CRC del mensaje recibido
-    crc_calculated = calculate_crc32(message.encode('utf-8'))
-
-    # Comparar CRC calculado con el CRC recibido
-    if crc_calculated == crc_received:
-        print("El mensaje es válido.")
-        print("Mensaje recibido:", message)
+    # Verificar si el CRC coincide
+    if received_crc == calculated_crc:
+        return message_data
     else:
-        print("Error en el mensaje. CRC calculado:", crc_calculated)
+        return None
 
-# Uso
+def read_message_from_file(filepath):
+    with open(filepath, 'r') as file:
+        binary_message = file.read().strip()
+    return binary_message
+
+def main():
+    # Ruta del archivo
+    filepath = 'msj/mensaje.txt'
+
+    try:
+        # Leer el mensaje desde el archivo
+        binary_message = read_message_from_file(filepath)
+        
+        # Asegúrate de que el mensaje es una cadena binaria válida
+        if not all(bit in '01' for bit in binary_message):
+            raise ValueError("El mensaje en el archivo no es una cadena binaria válida.")
+
+        # Procesar el mensaje con CRC
+        message = parse_message_with_crc(binary_message)
+        if message is not None:
+            print("Mensaje recibido:", ''.join(chr(int(message[i:i+8], 2)) for i in range(0, len(message), 8)))
+        else:
+            print("El mensaje contiene errores.")
+    except FileNotFoundError:
+        print("El archivo no se encuentra en la ruta especificada.")
+    except ValueError as e:
+        print("Error:", e)
+
 if __name__ == "__main__":
-    # Ruta relativa del archivo con el mensaje y CRC
-    file_path = "msj/mensaje.txt"
-    interpret_message_and_crc(file_path)
+    main()
