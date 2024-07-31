@@ -1,60 +1,80 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.util.Scanner;
+import java.util.Random;
 
 public class Emisor {
-
-    public static int[] encodeHamming117(int[] data) {
-        if (data.length != 7) {
-            throw new IllegalArgumentException("La entrada debe ser de 7 bits");
-        }
-
-        int[] code = new int[11];
-
-        code[2] = data[0];
-        code[4] = data[1];
-        code[5] = data[2];
-        code[6] = data[3];
-        code[8] = data[4];
-        code[9] = data[5];
-        code[10] = data[6];
-
-        code[0] = code[2] ^ code[4] ^ code[6] ^ code[8] ^ code[10];  // Paridad 1
-        code[1] = code[2] ^ code[5] ^ code[6] ^ code[9] ^ code[10];  // Paridad 2
-        code[3] = code[4] ^ code[5] ^ code[6];  // Paridad 4
-        code[7] = code[8] ^ code[9] ^ code[10];  // Paridad 8
-
-        return code;
-    }
-
-    public static List<String> encodeMessage(String message) {
-        List<String> encoded = new ArrayList<>();
-        for (char c : message.toCharArray()) {
-            String binary = String.format("%7s", Integer.toBinaryString(c)).replace(' ', '0');
-            int[] data = new int[7];
-            for (int i = 0; i < 7; i++) {
-                data[i] = Character.getNumericValue(binary.charAt(i));
-            }
-            int[] hamming = encodeHamming117(data);
-            StringBuilder sb = new StringBuilder();
-            for (int bit : hamming) {
-                sb.append(bit);
-            }
-            encoded.add(sb.toString());
-        }
-        return encoded;
-    }
+    private static final String HOST = "127.0.0.1";
+    private static final int PORT = 65432;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Introduce un mensaje a codificar: ");
-        String message = scanner.nextLine();
-        List<String> encodedMessage = encodeMessage(message);
+        System.out.print("Ingrese una palabra: ");
+        String word = scanner.nextLine();
 
-        System.out.println("Mensaje original: " + message);
-        System.out.println("Mensaje codificado en Hamming:");
-        System.out.println(String.join(",", encodedMessage));
+        String encodedData = encodeToHamming(word);
+        double errorProbability = 0.01; // Probabilidad de error del 1%
 
-        scanner.close();
+        String noisyData = applyNoise(encodedData, errorProbability);
+        System.out.println("Datos con ruido: " + noisyData);
+
+        sendData(noisyData);
+    }
+
+    private static String encodeToHamming(String word) {
+        StringBuilder hammingString = new StringBuilder();
+        for (char c : word.toCharArray()) {
+            String binaryChar = String.format("%7s", Integer.toBinaryString(c)).replaceAll(" ", "0");
+            String hammingChar = encodeHamming(binaryChar);
+            hammingString.append(hammingChar).append(",");
+        }
+        if (hammingString.length() > 0) {
+            hammingString.setLength(hammingString.length() - 1);
+        }
+        return hammingString.toString();
+    }
+
+    private static String encodeHamming(String binaryChar) {
+        int[] data = new int[7];
+        for (int i = 0; i < 7; i++) {
+            data[i] = Character.getNumericValue(binaryChar.charAt(i));
+        }
+
+        int p1 = data[0] ^ data[1] ^ data[3] ^ data[4] ^ data[6];
+        int p2 = data[0] ^ data[2] ^ data[3] ^ data[5] ^ data[6];
+        int p4 = data[1] ^ data[2] ^ data[3];
+        int p8 = data[4] ^ data[5] ^ data[6];
+
+        return String.format("%d%d%d%d%d%d%d%d%d%d%d", p1, p2, data[0], p4, data[1], data[2], data[3], p8, data[4], data[5], data[6]);
+    }
+
+    private static String applyNoise(String data, double errorProbability) {
+        Random random = new Random();
+        StringBuilder noisyData = new StringBuilder();
+
+        for (char bit : data.toCharArray()) {
+            if (bit == ',' || bit == ' ') {
+                noisyData.append(bit);
+            } else {
+                if (random.nextDouble() < errorProbability) {
+                    noisyData.append(bit == '0' ? '1' : '0');
+                } else {
+                    noisyData.append(bit);
+                }
+            }
+        }
+
+        return noisyData.toString();
+    }
+
+    private static void sendData(String data) {
+        try (Socket socket = new Socket(HOST, PORT);
+             OutputStream outputStream = socket.getOutputStream()) {
+            outputStream.write(data.getBytes());
+            System.out.println("Datos enviados");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
