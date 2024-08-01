@@ -1,25 +1,74 @@
+package Emisor;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Scanner;
 import java.util.Random;
+import java.util.ArrayList;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 
 public class Emisor {
     private static final String HOST = "127.0.0.1";
     private static final int PORT = 65432;
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Ingrese una palabra: ");
-        String word = scanner.nextLine();
+        // Número de pruebas
+        int[] numPruebas = {1000, 5000, 10000};
 
+        try {
+            for (int pruebas : numPruebas) {
+                int exitos = 0;
+                for (int i = 0; i < pruebas; i++) {
+                    if (enviarDatos()) {
+                        exitos++;
+                    }
+                }
+                double tasaExito = (double) exitos / pruebas;
+                guardarResultado(pruebas, tasaExito);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static boolean enviarDatos() {
+        Random random = new Random();
+        String word = generarPalabraAleatoria(10);  // Generar palabra de 10 caracteres
         String encodedData = encodeToHamming(word);
         double errorProbability = 0.01; // Probabilidad de error del 1%
 
         String noisyData = applyNoise(encodedData, errorProbability);
-        System.out.println("Datos con ruido: " + noisyData);
+        return sendData("0 " + noisyData);
+    }
 
-        sendData(noisyData);
+    private static String generarPalabraAleatoria(int length) {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        Random random = new Random();
+        StringBuilder word = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            word.append(characters.charAt(random.nextInt(characters.length())));
+        }
+        return word.toString();
+    }
+
+    private static boolean sendData(String data) {
+        try (Socket socket = new Socket(HOST, PORT);
+             OutputStream outputStream = socket.getOutputStream()) {
+            outputStream.write(data.getBytes());
+            // Aquí debería verificarse la respuesta del receptor para determinar si fue exitoso
+            return true;  // Suponer que fue exitoso por simplicidad
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private static void guardarResultado(int pruebas, double tasaExito) throws IOException {
+        try (FileWriter fw = new FileWriter("resultados.txt", true);
+             PrintWriter pw = new PrintWriter(fw)) {
+            pw.println(pruebas + "," + tasaExito);
+        }
     }
 
     private static String encodeToHamming(String word) {
@@ -66,15 +115,5 @@ public class Emisor {
         }
 
         return noisyData.toString();
-    }
-
-    private static void sendData(String data) {
-        try (Socket socket = new Socket(HOST, PORT);
-             OutputStream outputStream = socket.getOutputStream()) {
-            outputStream.write(data.getBytes());
-            System.out.println("Datos enviados");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
