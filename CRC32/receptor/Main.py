@@ -28,15 +28,16 @@ def parse_message_with_crc(binary_message):
     # Calcular el CRC del mensaje
     calculated_crc = crc32(message_bytes)
 
-    # Verificar si el CRC coincide
-    if received_crc == calculated_crc:
-        return message_data
-    else:
-        return None
+    return message_data
 
 def read_message_from_file(filepath):
     with open(filepath, 'r') as file:
-        binary_message = file.read().strip()
+        binary_message = file.readlines()
+
+    for i in range(len(binary_message)):
+        binary_message[i] = binary_message[i].strip()
+    
+    
     return binary_message
 
 def main():
@@ -46,17 +47,26 @@ def main():
     try:
         # Leer el mensaje desde el archivo
         binary_message = read_message_from_file(filepath)
-        
-        # Asegúrate de que el mensaje es una cadena binaria válida
-        if not all(bit in '01' for bit in binary_message):
-            raise ValueError("El mensaje en el archivo no es una cadena binaria válida.")
+        for cadena in binary_message:
+            # Asegúrate de que el mensaje es una cadena binaria válida
+            if not all(bit in '01' for bit in cadena):
+                raise ValueError("El mensaje en el archivo no es una cadena binaria válida.")
 
         # Procesar el mensaje con CRC
-        message = parse_message_with_crc(binary_message)
-        if message is not None:
-            print("Mensaje recibido:", ''.join(chr(int(message[i:i+8], 2)) for i in range(0, len(message), 8)))
-        else:
-            print("El mensaje contiene errores.")
+        message = []
+
+        for i in range(len(binary_message)):
+            message.append(parse_message_with_crc(binary_message[i]))
+
+        finalMessage = ""
+        for i in range(len(message)):
+            finalMessage += ''.join(chr(int(message[i][j:j+8], 2)) for j in range(0, len(message[i]), 8))
+            if message[i] is not None:
+                print("Mensaje recibido:", ''.join(chr(int(message[i][j:j+8], 2)) for j in range(0, len(message[i]), 8)))
+            else:
+                print("El mensaje contiene errores.")
+
+        print("Mensaje final:", finalMessage)
     except FileNotFoundError:
         print("El archivo no se encuentra en la ruta especificada.")
     except ValueError as e:

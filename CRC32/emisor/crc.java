@@ -8,8 +8,9 @@ public class crc {
     private static final int CRC32_MASK = 0xFFFFFFFF;
     private static final int[] CRC32_TABLE = new int[256];
 
-    private String data = "";
+    private String data;
     private ArrayList<String> mensaje = new ArrayList<>();
+    private ArrayList<String> crclst = new ArrayList<>();  // Inicializa crclst
     private String crc;
 
     static {
@@ -30,12 +31,18 @@ public class crc {
     public crc(String data) {
         this.data = data;
 
-        // Convertir cada carácter a su representación binaria de 8 bits
+        // Convertir cada carácter a su representación binaria de 8 bits y añadir a mensaje
         for (int i = 0; i < data.length(); i++) {
             mensaje.add(String.format("%8s", Integer.toBinaryString(data.charAt(i) & 0xFF)).replace(' ', '0'));
         }
 
-        // Calcular CRC-32 para el mensaje completo
+        // Calcular CRC-32 para cada cadena en mensaje y añadir a crclst
+        for (int i = 0; i < mensaje.size(); i++) {
+            System.out.println(mensaje.get(i));
+            crclst.add(calculateCRC32(mensaje.get(i)));
+        }
+
+        // Calcular CRC-32 para la cadena completa
         this.crc = calculateCRC32(data);
     }
 
@@ -60,8 +67,22 @@ public class crc {
         return mensaje;
     }
 
+    public ArrayList<String> getCrclst() {
+        return crclst;
+    }
+
     public String getCRC() {
         return crc;
+    }
+
+    public ArrayList<String> getFinalCRC(){
+        
+        ArrayList<String> fnl = new ArrayList<>();
+
+        for (int i = 0; i<mensaje.size(); i++){
+            fnl.add(mensaje.get(i)+crclst.get(i));
+        }
+        return fnl;
     }
 
 }
