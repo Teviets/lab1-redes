@@ -1,3 +1,4 @@
+
 # Tabla de polinomios para CRC-32
 CRC32_POLY = 0xEDB88320
 CRC32_INIT = 0xFFFFFFFF

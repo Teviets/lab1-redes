@@ -8,10 +8,12 @@ public class crc {
     private static final int CRC32_MASK = 0xFFFFFFFF;
     private static final int[] CRC32_TABLE = new int[256];
 
+
     private String data;
     private ArrayList<String> mensaje = new ArrayList<>();
     private ArrayList<String> crclst = new ArrayList<>();  // Inicializa crclst
     private String crc;
+
 
     static {
         // Inicializar la tabla CRC-32
@@ -31,6 +33,7 @@ public class crc {
     public crc(String data) {
         this.data = data;
 
+
         // Convertir cada carácter a su representación binaria de 8 bits y añadir a mensaje
         for (int i = 0; i < data.length(); i++) {
             mensaje.add(String.format("%8s", Integer.toBinaryString(data.charAt(i) & 0xFF)).replace(' ', '0'));
@@ -44,6 +47,7 @@ public class crc {
 
         // Calcular CRC-32 para la cadena completa
         this.crc = calculateCRC32(data);
+
     }
 
     private String calculateCRC32(String data) {
@@ -62,6 +66,7 @@ public class crc {
         // Convertir CRC a cadena binaria de 32 bits
         return String.format("%32s", Integer.toBinaryString(crc)).replace(' ', '0');
     }
+
 
     public ArrayList<String> getMensaje() {
         return mensaje;

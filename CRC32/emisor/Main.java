@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+
 public class Main {
     public static void main(String[] args) {
         vista view = new vista();
@@ -16,6 +17,7 @@ public class Main {
         crc crc = new crc(mensaje);
 
         view.MessageBin(crc.getMensaje());
+
         //view.MessageCRC(crc.getCRC());
         System.out.println(crc.getCrclst());
 
@@ -25,6 +27,7 @@ public class Main {
     }
 
     private static void writeTxt(ArrayList<String> msj){
+
         String directoryPath = "./msj";
         String filePath = directoryPath + "/mensaje.txt";
 
@@ -41,13 +44,17 @@ public class Main {
 
         // Escribir en el archivo
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+
             for (int i = 0; i<msj.size();i++){
                 writer.write(msj.get(i));
                 writer.newLine();
             }
+
             System.out.println("Datos escritos en el archivo " + filePath);
         } catch (IOException e) {
             System.err.println("Error al escribir en el archivo: " + e.getMessage());
         }
     }
+
 }
+

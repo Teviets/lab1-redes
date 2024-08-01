@@ -23,10 +23,12 @@ public class vista {
         System.out.println();
     }
 
+
     public static void MessageCRC(String mensaje){
         System.out.println("Mensaje con CRC: ");
         System.out.println(mensaje);
         
+
         System.out.println();
     }
 }
