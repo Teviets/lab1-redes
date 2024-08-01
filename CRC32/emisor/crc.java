@@ -11,6 +11,7 @@ public class crc {
     private String data = "";
     private ArrayList<String> mensaje = new ArrayList<>();
     private ArrayList<String> crc = new ArrayList<>();
+    private ArrayList<String> crclst = new ArrayList<>();
 
     static {
         // Inicializar la tabla CRC-32
@@ -35,9 +36,15 @@ public class crc {
             mensaje.add(String.format("%8s", Integer.toBinaryString(data.charAt(i))).replace(' ', '0'));
         }
 
-        // Calcular CRC-32 para el mensaje completo
-        String crcValue = calculateCRC32(data);
-        crc.add(crcValue);
+        for (int i = 0; i < mensaje.size(); i++) {
+            String crcValue = calculateCRC32(mensaje.get(i));
+            crclst.add(crcValue);
+            crc.add(crcValue);  // Asegurarse de llenar la lista crc con los valores calculados
+        }
+
+        for (int i = 0; i < crclst.size(); i++) {
+            System.out.println("Mensaje: " + mensaje.get(i) + " CRC: " + crclst.get(i));
+        }
     }
 
     private String calculateCRC32(String data) {
@@ -63,5 +70,15 @@ public class crc {
 
     public ArrayList<String> getMensaje() {
         return mensaje;
+    }
+
+    public ArrayList<String> getCrclst() {
+        ArrayList<String> crcFinal = new ArrayList<>();
+
+        for (int i = 0; i < mensaje.size(); i++) {
+            crcFinal.add(mensaje.get(i) + crc.get(i));
+        }
+
+        return crcFinal;
     }
 }

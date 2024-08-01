@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
@@ -15,10 +16,16 @@ public class Main {
         crc crc = new crc(mensaje);
 
         view.MessageBin(crc.getMensaje());
-        view.MessageCRC(crc.getCRC());
+        
 
-        String directoryPath = "./msj";
-        String filePath = directoryPath + "/mensaje.txt";
+        writeToFile(crc.getCrclst());
+
+    
+    }
+
+    private static void writeToFile(ArrayList<String> data) {
+        String directoryPath = "./CRC32/crc";
+        String filePath = directoryPath + "/crc.txt";
 
         // Crear directorio si no existe
         File directory = new File(directoryPath);
@@ -33,7 +40,9 @@ public class Main {
 
         // Escribir en el archivo
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            writer.write(crc.getCRC().toString());
+            for (String line : data) {
+                writer.write(line + "\n");
+            }
             System.out.println("Datos escritos en el archivo " + filePath);
         } catch (IOException e) {
             System.err.println("Error al escribir en el archivo: " + e.getMessage());
